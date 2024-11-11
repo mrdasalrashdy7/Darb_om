@@ -1,0 +1,2 @@
+*.file-extension filter=lfs diff=lfs merge=lfs -text
+*.zin filter=lfs diff=lfs merge=lfs -text

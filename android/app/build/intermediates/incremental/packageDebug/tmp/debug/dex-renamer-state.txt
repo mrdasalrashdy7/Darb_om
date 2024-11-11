@@ -1,0 +1,4 @@
+#Thu Oct 17 07:38:15 GST 2024
+base.0=C\:\\Users\\merdas\\StudioProjects\\darb\\android\\app\\build\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
+path.0=classes.dex
+renamed.0=classes.dex

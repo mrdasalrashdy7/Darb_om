@@ -1,0 +1,46 @@
+name: darb
+description: "A new Flutter project."
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_dotenv: ^5.0.2
+  cupertino_icons: ^1.0.8
+  get: ^4.6.6
+  shared_preferences: ^2.3.2
+  permission_handler: ^11.3.1
+  geolocator: ^13.0.1
+  geocoding: ^3.0.0
+  latlong2: ^0.9.1
+  http: ^1.2.2
+
+  google_maps_flutter: ^2.9.0
+  ml_linalg: ^13.12.6
+  firebase_storage: ^12.3.5
+  firebase_core: ^3.7.0
+  firebase_auth: ^5.3.2
+  cloud_firestore: ^5.4.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+
+  flutter_lints: ^4.0.0
+
+flutter:
+
+
+  uses-material-design: true
+
+  assets:
+    - assets/logo.jpg
+    - .env

@@ -1,0 +1,68 @@
+import 'package:darb/controller/middleware.dart';
+import 'package:darb/firebase_options.dart';
+import 'package:darb/view/Driver/HomeDriver.dart';
+import 'package:darb/view/auth/login.dart';
+import 'package:darb/view/auth/signup.dart';
+import 'package:darb/view/company/HomeCompany.dart';
+import 'package:darb/view/customer/HomeCustomer.dart';
+import 'package:darb/view/home.dart';
+import 'package:darb/view/maps.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+//TODO List
+/*
+adding sliding_up_panel package instade of buttomsheet
+
+Y?5TqtfwqJr!DArb
+darbMerdas
+*/
+
+SharedPreferences? prefs;
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  prefs = await SharedPreferences.getInstance();
+  await dotenv.load(fileName: ".env");
+  runApp(MapsPage());
+}
+
+Map route = {"dist": 100, "time": 2};
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
+<<<<<<< HEAD
+      home: GoogleMapstLearn(),
+=======
+      theme: ThemeData(
+        primarySwatch: Colors.orange,
+      ),
+      initialRoute: "/middleware",
+      getPages: [
+        GetPage(
+            name: "/middleware",
+            page: () => HomePage(),
+            middlewares: [AuthMiddleware()]),
+        GetPage(
+            name: "/Home",
+            page: () => HomePage(),
+            middlewares: [AuthMiddleware()]),
+        GetPage(name: "/login", page: () => Login()),
+        GetPage(name: "/signup", page: () => Signup()),
+        GetPage(name: "/DriverMap", page: () => MapsPage()),
+        GetPage(name: "/Hdriver", page: () => HomeDriver()),
+        GetPage(name: "/Hcustomer", page: () => HomeCustomer()),
+        GetPage(name: "/Hcompany", page: () => HomeCompany()),
+      ],
+>>>>>>> 2bc995c (add firbase and auth ,middelware, delet api))
+    );
+  }
+}
