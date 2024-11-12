@@ -1,6 +1,8 @@
 import 'package:darb/controller/middleware.dart';
+import 'package:darb/customfunction/logout.dart';
 import 'package:darb/firebase_options.dart';
 import 'package:darb/view/Driver/HomeDriver.dart';
+import 'package:darb/view/Google_Maps_Learn.dart';
 import 'package:darb/view/auth/login.dart';
 import 'package:darb/view/auth/signup.dart';
 import 'package:darb/view/company/HomeCompany.dart';
@@ -29,19 +31,18 @@ void main() async {
   );
   prefs = await SharedPreferences.getInstance();
   await dotenv.load(fileName: ".env");
-  runApp(MapsPage());
+  runApp(MyApp());
 }
 
 Map route = {"dist": 100, "time": 2};
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-<<<<<<< HEAD
-      home: GoogleMapstLearn(),
-=======
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
@@ -62,7 +63,6 @@ class MyApp extends StatelessWidget {
         GetPage(name: "/Hcustomer", page: () => HomeCustomer()),
         GetPage(name: "/Hcompany", page: () => HomeCompany()),
       ],
->>>>>>> 2bc995c (add firbase and auth ,middelware, delet api))
     );
   }
 }

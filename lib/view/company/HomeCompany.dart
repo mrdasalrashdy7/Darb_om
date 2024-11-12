@@ -5,10 +5,12 @@ class HomeCompany extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        "Iam Company",
-        style: TextStyle(fontSize: 200),
+    return Scaffold(
+      body: Center(
+        child: Text(
+          "Iam Company",
+          style: TextStyle(fontSize: 200),
+        ),
       ),
     );
   }

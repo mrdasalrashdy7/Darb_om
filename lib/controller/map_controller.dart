@@ -37,8 +37,6 @@ class MyMapController extends GetxController {
       Position? pos = await locationService.getCurrentLocation();
       if (pos != null) {
         initialPosition.value = LatLng(pos.latitude, pos.longitude);
-<<<<<<< HEAD
-=======
 
         // Update the circle position
         userLocationCircle.value = Circle(
@@ -50,7 +48,6 @@ class MyMapController extends GetxController {
           strokeWidth: 2,
         );
 
->>>>>>> 2bc995c (add firbase and auth ,middelware, delet api))
         mapController?.animateCamera(CameraUpdate.newCameraPosition(
           CameraPosition(target: initialPosition.value, zoom: 14.0),
         ));
