@@ -7,6 +7,7 @@ import 'package:darb/view/auth/login.dart';
 import 'package:darb/view/auth/signup.dart';
 import 'package:darb/view/company/HomeCompany.dart';
 import 'package:darb/view/customer/HomeCustomer.dart';
+import 'package:darb/view/customer/chooslocation.dart';
 import 'package:darb/view/home.dart';
 import 'package:darb/view/maps.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -63,6 +64,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: "/Hdriver", page: () => HomeDriver()),
         GetPage(name: "/Hcustomer", page: () => HomeCustomer()),
         GetPage(name: "/Hcompany", page: () => HomeCompany()),
+        GetPage(name: "/clocation", page: () => Chooslocation()),
       ],
     );
   }

@@ -1,129 +1,47 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:darb/controller/Customer_Controller.dart';
 import 'package:darb/customfunction/logout.dart';
 import 'package:darb/customfunction/validat.dart';
 import 'package:darb/main.dart';
 import 'package:darb/view/auth/login.dart';
 import 'package:darb/view/customwedgits/customtextfield.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:darb/controller/Customer_Controller.dart';
 
 class HomeCustomer extends StatelessWidget {
   HomeCustomer({super.key});
-  CustomerController Ccontroller = Get.put(CustomerController());
-  GlobalKey<FormState> addform = GlobalKey();
+  final CustomerController Ccontroller = Get.put(CustomerController());
+  final GlobalKey<FormState> addform = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.orange,
-        onPressed: () {
-          Get.defaultDialog(
-              title: "Add Location",
-              content: Form(
-                key: addform,
-                child: Column(
-                  children: [
-                    CustomTextFormField(
-                        hinttext: "Titel",
-                        Mycontroller: Ccontroller.LocationTitel,
-                        validator: (val) => validinput(val, 4, 200)),
-                    CustomTextFormField(
-                        hinttext: "wilayah",
-                        Mycontroller: Ccontroller.wilaya,
-                        validator: (val) => validinput(val, 4, 200)),
-                    CustomTextFormField(
-                        hinttext: "city",
-                        Mycontroller: Ccontroller.city,
-                        validator: (val) => validinput(val, 4, 200)),
-                    CustomTextFormField(
-                        hinttext: "building",
-                        Mycontroller: Ccontroller.building,
-                        validator: (val) => validinput(val, 4, 200)),
-                    CustomTextFormField(
-                        hinttext: "custom instructions",
-                        Mycontroller: Ccontroller.custom_instructions),
-                    Obx(() => Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text("make this my default location"),
-                            Checkbox(
-                                value: Ccontroller.isdefoultlocation.value,
-                                onChanged: (val) {
-                                  Ccontroller.isdefoultlocation.value =
-                                      val ?? false;
-                                }),
-                          ],
-                        )),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    MaterialButton(
-                      onPressed: () async {
-                        if (addform.currentState!.validate()) {
-                          // Prepare location data
-                          Map<String, dynamic> locationData = {
-                            'title': Ccontroller.LocationTitel.text,
-                            'wilaya': Ccontroller.wilaya.text,
-                            'city': Ccontroller.city.text,
-                            'building': Ccontroller.building.text,
-                            'custom_instructions':
-                                Ccontroller.custom_instructions.text,
-                            'is_default': Ccontroller.isdefoultlocation.value,
-                          };
-
-                          String userId = prefs!.getString("userid").toString();
-                          await FirebaseFirestore.instance
-                              .collection("users")
-                              .doc(userId) // Specific user document
-                              .collection(
-                                  "location") // Subcollection for locations
-                              .add(locationData)
-                              .then((value) => print("Location added"))
-                              .catchError((error) =>
-                                  print("Failed to add location: $error"));
-                        }
-                      },
-                      child: Text(
-                        "Add Location",
-                        style: TextStyle(fontSize: 20, color: Colors.white),
-                      ),
-                      color: Colors.orange,
-                    )
-                  ],
-                ),
-              ));
-        },
-        child: Icon(
-          Icons.add_location_alt_outlined,
-          color: Colors.white,
-        ),
-      ),
+      floatingActionButton: customfloatingbutton(),
       appBar: AppBar(
         backgroundColor: Colors.orange,
-        title: const Text("ٍCustomer"),
+        title: const Text("Customer"),
         actions: [
           IconButton(
-              onPressed: () {
-                Get.to(() => Login());
-              },
-              icon: Icon(Icons.login)),
+            onPressed: () {
+              Get.to(() => Login());
+            },
+            icon: const Icon(Icons.login),
+          ),
           IconButton(
-              onPressed: () {
-                logout();
-              },
-              icon: const Icon(Icons.exit_to_app))
+            onPressed: () {
+              logout();
+            },
+            icon: const Icon(Icons.exit_to_app),
+          ),
         ],
       ),
-      body: ListView(
+      body: Column(
         children: [
-          SizedBox(
-            height: 30,
-          ),
-          Container(
-            child: Text("Hellow mr, ${Ccontroller.name}"),
-          ),
+          const SizedBox(height: 30),
+          Container(child: Text("Hello Mr, ${Ccontroller.name}")),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -132,7 +50,7 @@ class HomeCustomer extends StatelessWidget {
                   height: 40,
                   alignment: Alignment.center,
                   color: Colors.orange,
-                  child: Text(
+                  child: const Text(
                     "Locations",
                     style: TextStyle(fontSize: 20, color: Colors.white),
                   ),
@@ -143,31 +61,209 @@ class HomeCustomer extends StatelessWidget {
                   height: 40,
                   alignment: Alignment.center,
                   color: Colors.orangeAccent,
-                  child: Text(
-                    "Ordars",
+                  child: const Text(
+                    "Orders",
                     style: TextStyle(fontSize: 20, color: Colors.white),
                   ),
                 ),
-              )
+              ),
             ],
           ),
-          SizedBox(
-            height: 20,
+          const SizedBox(height: 20),
+          Expanded(
+            child: Obx(() {
+              if (Ccontroller.userLocations.isEmpty) {
+                return const Center(
+                  child: Text(
+                      "You have not added any location. Add one to start."),
+                );
+              }
+
+              return ListView.builder(
+                itemCount: Ccontroller.userLocations.length,
+                itemBuilder: (context, index) {
+                  var location = Ccontroller.userLocations[index];
+                  GeoPoint geoPoint = location['latlong'];
+                  LatLng position =
+                      LatLng(geoPoint.latitude, geoPoint.longitude);
+                  String docId = location.id;
+
+                  return Slidable(
+                    key: Key(docId),
+                    startActionPane: ActionPane(
+                      motion: const StretchMotion(),
+                      children: [
+                        SlidableAction(
+                          onPressed: (context) async {
+                            if (location['is_default']) {
+                              Get.snackbar(
+                                "Cannot delete default location",
+                                "Please choose another default location before deleting this one.",
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.red.withOpacity(0.8),
+                                colorText: Colors.white,
+                              );
+                            } else {
+                              bool? confirm = await Get.defaultDialog<bool>(
+                                title: "Delete!",
+                                middleText:
+                                    "Do you want to delete this location?",
+                                textConfirm: "Yes",
+                                textCancel: "No",
+                                confirmTextColor: Colors.white,
+                                onConfirm: () => Get.back(result: true),
+                                onCancel: () => Get.back(result: false),
+                              );
+
+                              if (confirm == true) {
+                                await Ccontroller.deleteLocation(docId);
+                                Get.snackbar(
+                                  "Success",
+                                  "Location deleted successfully.",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  backgroundColor:
+                                      Colors.green.withOpacity(0.8),
+                                  colorText: Colors.white,
+                                );
+                              }
+                            }
+                          },
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          icon: Icons.delete,
+                          label: 'Delete',
+                        ),
+                      ],
+                    ),
+                    endActionPane: ActionPane(
+                      motion: const StretchMotion(),
+                      children: [
+                        SlidableAction(
+                          onPressed: (context) async {
+                            if (location['is_default']) {
+                              Get.snackbar(
+                                "Already Default",
+                                "This location is already set as the default.",
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.blue.withOpacity(0.8),
+                                colorText: Colors.white,
+                              );
+                            } else {
+                              await Ccontroller.setDefaultLocation(docId);
+                              Get.snackbar(
+                                "Success",
+                                "Location set as default.",
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.green.withOpacity(0.8),
+                                colorText: Colors.white,
+                              );
+                            }
+                          },
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          icon: Icons.check,
+                          label: 'Make Default',
+                        ),
+                      ],
+                    ),
+                    child: Card(
+                      elevation: 3,
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 16),
+                      child: ListTile(
+                        title: Text(location['title']),
+                        subtitle: Text(
+                          "Wilaya ${location['wilaya']} | City ${location['city']} | Building ${location['building']}",
+                        ),
+                        leading: location['is_default']
+                            ? Icon(Icons.check, color: Colors.green)
+                            : const Icon(Icons.location_on, color: Colors.grey),
+                      ),
+                    ),
+                  );
+                },
+              );
+            }),
           ),
-// ListView.builder(itemBuilder: itemBuilder)
-          Column(
-            children: [
-              Card(
-                child: ListTile(
-                  title: Text("My defoult location"),
-                  subtitle: Text("Oman, Muscat, Alkhoud-6"),
-                  leading:
-                      IconButton(onPressed: () {}, icon: Icon(Icons.settings)),
-                ),
-              )
-            ],
-          )
         ],
+      ),
+    );
+  }
+
+  FloatingActionButton customfloatingbutton() {
+    return FloatingActionButton(
+      backgroundColor: Colors.orange,
+      onPressed: () {
+        Get.defaultDialog(
+          title: "Add Location",
+          content: Form(
+            key: GlobalKey<FormState>(),
+            child: Column(
+              children: [
+                CustomTextFormField(
+                    hinttext: "Titel",
+                    Mycontroller: Ccontroller.LocationTitel,
+                    validator: (val) => validinput(val, 4, 200)),
+                CustomTextFormField(
+                    hinttext: "wilayah",
+                    Mycontroller: Ccontroller.wilaya,
+                    validator: (val) => validinput(val, 4, 200)),
+                CustomTextFormField(
+                    hinttext: "city",
+                    Mycontroller: Ccontroller.city,
+                    validator: (val) => validinput(val, 4, 200)),
+                CustomTextFormField(
+                    hinttext: "building",
+                    Mycontroller: Ccontroller.building,
+                    validator: (val) => validinput(val, 4, 200)),
+                CustomTextFormField(
+                    hinttext: "custom instructions",
+                    Mycontroller: Ccontroller.custom_instructions),
+                MaterialButton(
+                  color:
+                      Ccontroller.marker.isEmpty ? Colors.grey : Colors.orange,
+                  onPressed: () {
+                    Get.toNamed("clocation");
+                  },
+                  child: const Row(
+                    children: [Icon(Icons.map), Text("choos location")],
+                  ),
+                ),
+                Obx(() => Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("make this my default location"),
+                        Checkbox(
+                            value: Ccontroller.isdefoultlocation.value,
+                            onChanged: (val) {
+                              Ccontroller.isdefoultlocation.value =
+                                  val ?? false;
+                            }),
+                      ],
+                    )),
+                const SizedBox(
+                  height: 10,
+                ),
+                MaterialButton(
+                  onPressed: () {
+                    Ccontroller.addLocation(
+                        addform); // Call the controller method
+                  },
+                  child: const Text(
+                    "Add Location",
+                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  ),
+                  color: Colors.orange,
+                )
+              ],
+            ),
+          ),
+        );
+        ;
+      },
+      child: const Icon(
+        Icons.add_location_alt_outlined,
+        color: Colors.white,
       ),
     );
   }
