@@ -5,60 +5,80 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class Login extends StatelessWidget {
-  LoginController Lcontroller = Get.put(LoginController());
-  GlobalKey<FormState> formstate = GlobalKey();
+  final LoginController Lcontroller = Get.put(LoginController());
+  final GlobalKey<FormState> formstate = GlobalKey<FormState>();
+
   Login({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-          color: Colors.white,
+        color: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Center(
           child: Form(
-              key: formstate,
-              child: (ListView(
+            key: formstate,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(
-                    height: 40,
-                  ),
                   Image.asset(
                     "assets/logo.jpg",
-                    width: 300,
-                    height: 300,
+                    width: 200,
+                    height: 200,
                   ),
+                  const SizedBox(height: 16),
                   CustomTextFormField(
                     hinttext: "البريد الإلكتروني",
                     Mycontroller: Lcontroller.email,
                     validator: (val) => validateEmail(val),
                   ),
-                  const SizedBox(
-                    height: 30,
-                  ),
+                  const SizedBox(height: 16),
                   CustomTextFormField(
                     hinttext: "كلمة المرور",
                     Mycontroller: Lcontroller.password,
                     validator: (val) => validatePassword(val),
+                    obscuretext: true,
                   ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  MaterialButton(
-                    onPressed: () {
-                      if (formstate.currentState!.validate()) {
-                        Lcontroller.login();
-                      }
-                    },
-                    child: const Text("Login"),
-                    color: Colors.orange,
-                  ),
+                  const SizedBox(height: 16),
+                  Obx(() {
+                    return Lcontroller.isLoading.value
+                        ? CircularProgressIndicator()
+                        : MaterialButton(
+                            onPressed: () async {
+                              if (formstate.currentState!.validate()) {
+                                await Lcontroller.login();
+                              }
+                            },
+                            child: const Text("Login"),
+                            color: Colors.orange,
+                          );
+                  }),
+                  const SizedBox(height: 16),
                   InkWell(
                     onTap: () {
                       Get.offNamed("signup");
                     },
-                    child: Center(child: Text("Dont have account? Sign up")),
-                  )
+                    child: Text("Don't have an account? Sign up"),
+                  ),
+                  Obx(() {
+                    return Lcontroller.errorMessage.isNotEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              Lcontroller.errorMessage.value,
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          )
+                        : SizedBox.shrink();
+                  }),
                 ],
-              )))),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

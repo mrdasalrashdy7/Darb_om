@@ -1,5 +1,6 @@
 import 'package:darb/controller/driver_controller.dart';
 import 'package:darb/customfunction/logout.dart';
+import 'package:darb/view/Driver/trips.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -38,19 +39,22 @@ class HomeDriver extends StatelessWidget {
           Wrap(
             alignment: WrapAlignment.center,
             children: [
-              Container(
-                padding: EdgeInsets.all(5),
-                margin: EdgeInsets.all(5),
-                color: Colors.orange,
-                width: 150,
-                height: 150,
-                child: Text(
-                  "Coming trip",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
+              InkWell(
+                onTap: () => Get.to(() => Trips()),
+                child: Container(
+                  padding: EdgeInsets.all(5),
+                  margin: EdgeInsets.all(5),
+                  color: Colors.orange,
+                  width: 150,
+                  height: 150,
+                  child: Text(
+                    "Coming trip",
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ),
               Container(

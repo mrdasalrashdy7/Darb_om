@@ -48,14 +48,14 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
       ),
       // initialRoute: "/middleware",
-      home: HomeCustomer(),
+      home: HomeDriver(),
       getPages: [
         GetPage(
             name: "/middleware",
             page: () => HomePage(),
             middlewares: [AuthMiddleware()]),
         GetPage(
-            name: "/Home",
+            name: "/home",
             page: () => HomePage(),
             middlewares: [AuthMiddleware()]),
         GetPage(name: "/login", page: () => Login()),
