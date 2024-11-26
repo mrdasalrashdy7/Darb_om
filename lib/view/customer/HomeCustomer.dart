@@ -19,7 +19,7 @@ class HomeCustomer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: customfloatingbutton(),
+      floatingActionButton: customFbuton(context),
       appBar: AppBar(
         backgroundColor: Colors.orange,
         title: const Text("Customer"),
@@ -190,75 +190,100 @@ class HomeCustomer extends StatelessWidget {
     );
   }
 
-  FloatingActionButton customfloatingbutton() {
+  FloatingActionButton customFbuton(BuildContext context) {
     return FloatingActionButton(
       backgroundColor: Colors.orange,
       onPressed: () {
-        Get.defaultDialog(
-          title: "Add Location",
-          content: Form(
-            key: GlobalKey<FormState>(),
-            child: Column(
-              children: [
-                CustomTextFormField(
-                    hinttext: "Titel",
-                    Mycontroller: Ccontroller.LocationTitel,
-                    validator: (val) => validinput(val, 4, 200)),
-                CustomTextFormField(
-                    hinttext: "wilayah",
-                    Mycontroller: Ccontroller.wilaya,
-                    validator: (val) => validinput(val, 4, 200)),
-                CustomTextFormField(
-                    hinttext: "city",
-                    Mycontroller: Ccontroller.city,
-                    validator: (val) => validinput(val, 4, 200)),
-                CustomTextFormField(
-                    hinttext: "building",
-                    Mycontroller: Ccontroller.building,
-                    validator: (val) => validinput(val, 4, 200)),
-                CustomTextFormField(
-                    hinttext: "custom instructions",
-                    Mycontroller: Ccontroller.custom_instructions),
-                MaterialButton(
-                  color:
-                      Ccontroller.marker.isEmpty ? Colors.grey : Colors.orange,
-                  onPressed: () {
-                    Get.toNamed("clocation");
-                  },
-                  child: const Row(
-                    children: [Icon(Icons.map), Text("choos location")],
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text("Add Location"),
+              content: SingleChildScrollView(
+                child: Form(
+                  key: GlobalKey<FormState>(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomTextFormField(
+                        hinttext: "Title",
+                        Mycontroller: Ccontroller.LocationTitel,
+                        validator: (val) => validinput(val, 4, 200),
+                      ),
+                      CustomTextFormField(
+                        hinttext: "Wilayah",
+                        Mycontroller: Ccontroller.wilaya,
+                        validator: (val) => validinput(val, 4, 200),
+                      ),
+                      CustomTextFormField(
+                        hinttext: "City",
+                        Mycontroller: Ccontroller.city,
+                        validator: (val) => validinput(val, 4, 200),
+                      ),
+                      CustomTextFormField(
+                        hinttext: "Building",
+                        Mycontroller: Ccontroller.building,
+                        validator: (val) => validinput(val, 4, 200),
+                      ),
+                      CustomTextFormField(
+                        hinttext: "Custom Instructions",
+                        Mycontroller: Ccontroller.custom_instructions,
+                      ),
+                      const SizedBox(height: 10),
+                      MaterialButton(
+                        color: Ccontroller.marker.isEmpty
+                            ? Colors.grey
+                            : Colors.orange,
+                        onPressed: () {
+                          Navigator.pop(
+                              context); // Close dialog before navigation
+                          Get.toNamed("clocation");
+                        },
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.map),
+                            SizedBox(width: 8),
+                            Text("Choose Location"),
+                          ],
+                        ),
+                      ),
+                      Obx(
+                        () => Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text("default location"),
+                            Checkbox(
+                              value: Ccontroller.isdefoultlocation.value,
+                              onChanged: (val) {
+                                Ccontroller.isdefoultlocation.value =
+                                    val ?? false;
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      MaterialButton(
+                        color: Colors.orange,
+                        onPressed: () {
+                          Ccontroller.addLocation(
+                              addform); // Call the controller method
+                          Navigator.pop(context); // Close the dialog
+                        },
+                        child: const Text(
+                          "Add Location",
+                          style: TextStyle(fontSize: 20, color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Obx(() => Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text("make this my default location"),
-                        Checkbox(
-                            value: Ccontroller.isdefoultlocation.value,
-                            onChanged: (val) {
-                              Ccontroller.isdefoultlocation.value =
-                                  val ?? false;
-                            }),
-                      ],
-                    )),
-                const SizedBox(
-                  height: 10,
-                ),
-                MaterialButton(
-                  onPressed: () {
-                    Ccontroller.addLocation(
-                        addform); // Call the controller method
-                  },
-                  child: const Text(
-                    "Add Location",
-                    style: TextStyle(fontSize: 20, color: Colors.white),
-                  ),
-                  color: Colors.orange,
-                )
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
+
         ;
       },
       child: const Icon(
