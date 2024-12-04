@@ -14,6 +14,33 @@ class DriverController extends GetxController {
   TextEditingController OTname = TextEditingController();
   TextEditingController OTPhone = TextEditingController();
 
+/*
+firbase firstore structure
+
+users
+  -email
+  -id
+  -name
+  -phone
+  -role
+
+locations
+  -phone
+  -userid
+  -location
+  -discription
+  -status
+
+trips
+  -titel
+  -date
+  -driverid
+  -points
+    -name
+    -status
+    -lcationid
+  
+*/
   Rx<DateTime> tripDate = DateTime.now().obs;
   var points = <Point>[].obs;
   var tripId = "".obs; // To store the trip ID after saving the trip

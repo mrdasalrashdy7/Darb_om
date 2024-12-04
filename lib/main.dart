@@ -1,4 +1,4 @@
-import 'package:darb/controller/middleware.dart';
+import 'package:darb/Middleware/middleware.dart';
 import 'package:darb/customfunction/logout.dart';
 import 'package:darb/firebase_options.dart';
 import 'package:darb/view/Driver/HomeDriver.dart';
@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
       ),
       // initialRoute: "/middleware",
-      home: HomeDriver(),
+      home: MapsPage(),
       getPages: [
         GetPage(
             name: "/middleware",

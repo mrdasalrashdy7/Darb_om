@@ -6,7 +6,25 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+
+/*
+Steps Description
+Order Points with Nearest Neighbor:
+
+Determines an initial stop order by visiting the nearest unvisited marker.
+Fetch Directions Using Google Maps API:
+
+Retrieves route details (distances, durations, and polylines) for the nearest neighbor order in batches.
+Optimize with OPT2:
+
+Refines the stop order by swapping segments to find a shorter route.
+Refetch Directions with Google Maps API:
+
+Updates route details and polylines based on the optimized stop order.
+*/
+//todo: make the start point as my location or defirent location more efficint,
+//todo: prepare to conver locations from tripDetails page to mapsPage
+//todo: add GO botton and its functionaloty
 
 class MyMapController extends GetxController {
   var markers = <Marker>[].obs;
@@ -24,7 +42,6 @@ class MyMapController extends GetxController {
   LocationService locationService = LocationService();
   var initialPosition = LatLng(23.614328, 58.545284).obs;
   GoogleMapController? mapController;
-  SharedPreferences? prefs;
 
   @override
   void onInit() {
@@ -108,6 +125,49 @@ class MyMapController extends GetxController {
     return batches;
   }
 
+  void optimizeStopOrderUsingNearestNeighbor() {
+    if (markers.length < 2) {
+      Get.snackbar('Insufficient Stops', 'Please add more stops.');
+      return;
+    }
+
+    int n = markers.length;
+    List<bool> visited = List.filled(n, false);
+    optimizedOrder.clear();
+    optimizedOrder.add(0); // Start from the first marker
+    visited[0] = true;
+
+    int current = 0;
+    for (int i = 1; i < n; i++) {
+      double minDistance = double.infinity;
+      int next = -1;
+
+      for (int j = 0; j < n; j++) {
+        if (!visited[j]) {
+          LatLng origin = markers[current].position;
+          LatLng destination = markers[j].position;
+          double distance = Geolocator.distanceBetween(
+            origin.latitude,
+            origin.longitude,
+            destination.latitude,
+            destination.longitude,
+          );
+
+          if (distance < minDistance) {
+            minDistance = distance;
+            next = j;
+          }
+        }
+      }
+
+      if (next != -1) {
+        optimizedOrder.add(next);
+        visited[next] = true;
+        current = next;
+      }
+    }
+  }
+
   Future<void> fetchRouteWithBatches(List<int> orderedStops) async {
     String? apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
     if (apiKey == null) throw Exception('API key not found');
@@ -154,58 +214,94 @@ class MyMapController extends GetxController {
         throw Exception('Failed to fetch route');
       }
     }
+
+    // Call the OPT2 optimization method after fetching the routes
+    optimizeWithOPT2();
   }
 
-  Future<void> optimizeRoute() async {
-    // Check if cache is valid based on start and end points
-    bool isCached = await loadCachedRoute();
+  void optimizeWithOPT2() {
+    int n = optimizedOrder.length;
+    if (n < 3) return; // OPT2 requires at least 3 stops to perform swaps
 
-    if (!isCached || hasRouteConfigurationChanged()) {
-      await optimizeStopOrderUsingNearestNeighbor();
+    bool improvement = true;
+    while (improvement) {
+      improvement = false;
+      for (int i = 1; i < n - 1; i++) {
+        for (int k = i + 1; k < n; k++) {
+          double currentDistance = calculateRouteDistance(optimizedOrder);
+          swap(optimizedOrder, i, k);
+          double newDistance = calculateRouteDistance(optimizedOrder);
 
-      if (endPointType.value == 'Return to Start' && startPoint != null) {
-        optimizedOrder.add(0); // Assume startPoint is the first marker
+          if (newDistance < currentDistance) {
+            improvement = true; // Keep the new order
+          } else {
+            // Revert the swap if no improvement
+            swap(optimizedOrder, i, k);
+          }
+        }
       }
-
-      await fetchRouteWithBatches(optimizedOrder);
-      await cacheOptimizedRoute(optimizedOrder, distances, durations);
-    } else {
-      Get.snackbar('Cache Loaded', 'Using cached optimized route.');
     }
   }
 
-  Future<void> cacheOptimizedRoute(List<int> routeOrder,
-      List<double> routeDistances, List<double> routeDurations) async {
-    prefs = await SharedPreferences.getInstance();
-    prefs!.setString('cached_route_order', routeOrder.join(','));
-    prefs!.setString('cached_route_distances', routeDistances.join(','));
-    prefs!.setString('cached_route_durations', routeDurations.join(','));
-  }
-
-  Future<bool> loadCachedRoute() async {
-    prefs = await SharedPreferences.getInstance();
-    String? cachedOrder = prefs!.getString('cached_route_order');
-    String? cachedDistances = prefs!.getString('cached_route_distances');
-    String? cachedDurations = prefs!.getString('cached_route_durations');
-
-    if (cachedOrder != null &&
-        cachedDistances != null &&
-        cachedDurations != null) {
-      optimizedOrder.assignAll(cachedOrder.split(',').map(int.parse).toList());
-      distances
-          .assignAll(cachedDistances.split(',').map(double.parse).toList());
-      durations
-          .assignAll(cachedDurations.split(',').map(double.parse).toList());
-      return true;
+  void swap(List<int> order, int i, int k) {
+    // Reverse the order of elements between indices i and k
+    while (i < k) {
+      int temp = order[i];
+      order[i] = order[k];
+      order[k] = temp;
+      i++;
+      k--;
     }
-    return false;
   }
 
-  bool hasRouteConfigurationChanged() {
-    // Check if the current route configuration has changed from cached data
-    return (startPoint != markers.first.position ||
-        ((endPointType.value == 'Return to Start' && endPoint != startPoint) ||
-            endPoint != markers.last.position));
+  double calculateRouteDistance(List<int> order) {
+    // Calculate total distance of the route based on the current order
+    double totalDistance = 0.0;
+    for (int i = 0; i < order.length - 1; i++) {
+      LatLng origin = markers[order[i]].position;
+      LatLng destination = markers[order[i + 1]].position;
+      totalDistance += Geolocator.distanceBetween(
+        origin.latitude,
+        origin.longitude,
+        destination.latitude,
+        destination.longitude,
+      );
+    }
+    return totalDistance;
+  }
+
+  Future<void> refetchFinalRoute() async {
+    await fetchRouteWithBatches(optimizedOrder);
+  }
+
+  void clearMap() {
+    markers.clear();
+    polylines.clear();
+    optimizedOrder.clear();
+    distances.clear();
+    durations.clear();
+  }
+
+  void setStartPoint(String type) {
+    startPointType.value = type;
+    if (type == 'Me') {
+      getLocation();
+      startPoint = initialPosition.value;
+    } else if (markers.isNotEmpty) {
+      startPoint = markers.first.position;
+    }
+  }
+
+  void setEndPoint(String type) {
+    endPointType.value = type;
+    if (type == 'Me') {
+      getLocation();
+      endPoint = initialPosition.value;
+    } else if (type == 'Return to Start' && startPoint != null) {
+      endPoint = startPoint;
+    } else if (markers.isNotEmpty) {
+      endPoint = markers.last.position;
+    }
   }
 
   List<LatLng> decodePolyline(String encoded) {
@@ -237,97 +333,6 @@ class MyMapController extends GetxController {
     return polyline;
   }
 
-  Future<void> optimizeStopOrderUsingNearestNeighbor() async {
-    if (markers.length < 2) {
-      Get.snackbar('Insufficient Stops', 'Please add more stops.');
-      return;
-    }
-    optimizedOrder.assignAll(_nearestNeighborAlgorithm());
-  }
-
-  List<int> _nearestNeighborAlgorithm() {
-    int n = markers.length;
-    List<bool> visited = List.filled(n, false);
-    List<int> route = [0];
-    visited[0] = true;
-    int currentStop = 0;
-
-    for (int i = 1; i < n; i++) {
-      double minDistance = double.infinity;
-      int nextStop = -1;
-
-      for (int j = 0; j < n; j++) {
-        if (!visited[j]) {
-          LatLng origin = markers[currentStop].position;
-          LatLng destination = markers[j].position;
-          double distance = Geolocator.distanceBetween(origin.latitude,
-              origin.longitude, destination.latitude, destination.longitude);
-          if (distance < minDistance) {
-            nextStop = j;
-            minDistance = distance;
-          }
-        }
-      }
-      if (nextStop != -1) {
-        route.add(nextStop);
-        visited[nextStop] = true;
-        currentStop = nextStop;
-      }
-    }
-    return route;
-  }
-
-  void clearMap() {
-    markers.clear();
-    polylines.clear();
-    optimizedOrder.clear();
-    distances.clear();
-    durations.clear();
-    prefs?.clear(); // Clear cache
-  }
-
-  void setStartPoint(String type) {
-    startPointType.value = type;
-    if (type == 'Me') {
-      getLocation();
-      startPoint = initialPosition.value;
-    } else if (markers.isNotEmpty) {
-      startPoint = markers.first.position;
-    }
-  }
-
-  void setEndPoint(String type) {
-    endPointType.value = type;
-    if (type == 'Me') {
-      getLocation();
-      endPoint = initialPosition.value;
-    } else if (type == 'Return to Start' && startPoint != null) {
-      endPoint = startPoint;
-    } else if (markers.isNotEmpty) {
-      endPoint = markers.last.position;
-    }
-  }
-
-  Widget _buildDropdownTile({
-    required String title,
-    required String currentSelection,
-    required Function(String) onSelected,
-    required List<DropdownMenuItem<String>> items,
-  }) {
-    return ListTile(
-      title: Text(title),
-      trailing: DropdownButton<String>(
-        value: currentSelection,
-        items: items,
-        onChanged: (value) {
-          if (value != null) {
-            onSelected(value);
-          }
-        },
-      ),
-    );
-  }
-
   void showMainBottomSheet(BuildContext context) {
     Get.bottomSheet(
       isScrollControlled: true,
@@ -336,7 +341,8 @@ class MyMapController extends GetxController {
             height: bottomSheetHeight.value,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -350,7 +356,7 @@ class MyMapController extends GetxController {
                           bottomSheetHeight.value += 100.0;
                         }
                       },
-                      icon: Icon(Icons.arrow_upward),
+                      icon: const Icon(Icons.arrow_upward),
                     ),
                     IconButton(
                       onPressed: () {
@@ -358,15 +364,15 @@ class MyMapController extends GetxController {
                           bottomSheetHeight.value -= 100.0;
                         }
                       },
-                      icon: Icon(Icons.arrow_downward),
+                      icon: const Icon(Icons.arrow_downward),
                     ),
                     IconButton(
                       onPressed: () => addCustomPoint(initialPosition.value),
-                      icon: Icon(Icons.add),
+                      icon: const Icon(Icons.add),
                     ),
                     IconButton(
                       onPressed: clearMap,
-                      icon: Icon(Icons.clear),
+                      icon: const Icon(Icons.clear),
                     ),
                   ],
                 ),
@@ -389,9 +395,9 @@ class MyMapController extends GetxController {
                           setStartPoint(type);
                         },
                         items: [
-                          DropdownMenuItem(
+                          const DropdownMenuItem(
                               value: 'Me', child: Text('Me Location')),
-                          DropdownMenuItem(
+                          const DropdownMenuItem(
                               value: 'Custom Point',
                               child: Text('Custom Point')),
                         ],
@@ -404,20 +410,28 @@ class MyMapController extends GetxController {
                           setEndPoint(type);
                         },
                         items: [
-                          DropdownMenuItem(
+                          const DropdownMenuItem(
                               value: 'Me', child: Text('Me Location')),
-                          DropdownMenuItem(
+                          const DropdownMenuItem(
                               value: 'Custom Point',
                               child: Text('Custom Point')),
-                          DropdownMenuItem(
+                          const DropdownMenuItem(
                               value: 'Return to Start',
                               child: Text('Return to Start')),
                         ],
                       ),
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (markers.length > 1) {
-                            optimizeRoute();
+                            Get.dialog(
+                                Center(child: CircularProgressIndicator()),
+                                barrierDismissible: false);
+                            optimizeStopOrderUsingNearestNeighbor(); // Step 1
+                            await fetchRouteWithBatches(
+                                optimizedOrder); // Step 2
+                            optimizeWithOPT2(); // Step 3
+                            await refetchFinalRoute(); // Step 4
+                            Get.back(); // Dismiss loading dialog
                           } else {
                             Get.snackbar('Insufficient Markers',
                                 'Please add at least two markers on the map.');
@@ -453,6 +467,26 @@ class MyMapController extends GetxController {
               ],
             ),
           )),
+    );
+  }
+
+  Widget _buildDropdownTile({
+    required String title,
+    required String currentSelection,
+    required Function(String) onSelected,
+    required List<DropdownMenuItem<String>> items,
+  }) {
+    return ListTile(
+      title: Text(title),
+      trailing: DropdownButton<String>(
+        value: currentSelection,
+        items: items,
+        onChanged: (value) {
+          if (value != null) {
+            onSelected(value);
+          }
+        },
+      ),
     );
   }
 }
