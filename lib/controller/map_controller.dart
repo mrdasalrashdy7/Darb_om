@@ -168,57 +168,6 @@ class MyMapController extends GetxController {
     }
   }
 
-  Future<void> fetchRouteWithBatches(List<int> orderedStops) async {
-    String? apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
-    if (apiKey == null) throw Exception('API key not found');
-
-    List<LatLng> waypoints =
-        orderedStops.map((index) => markers[index].position).toList();
-    List<List<LatLng>> waypointBatches = batchWaypoints(waypoints);
-    polylines.clear();
-
-    for (int i = 0; i < waypointBatches.length; i++) {
-      final batch = waypointBatches[i];
-      LatLng origin = batch.first;
-      LatLng destination = batch.last;
-      List<LatLng> intermediateWaypoints = batch.sublist(1, batch.length - 1);
-
-      String waypointsString = intermediateWaypoints
-          .map((point) => '${point.latitude},${point.longitude}')
-          .join('|');
-      final url =
-          'https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&waypoints=$waypointsString&key=$apiKey&optimizeWaypoints=false&departure_time=now';
-
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final points =
-            decodePolyline(data['routes'][0]['overview_polyline']['points']);
-
-        polylines.add(Polyline(
-          polylineId: PolylineId("route_batch_$i"),
-          points: points,
-          color: Colors.blue,
-          width: 4,
-        ));
-
-        final distance = data['routes'][0]['legs']
-                .fold(0, (sum, leg) => sum + leg['distance']['value']) /
-            1000;
-        final duration = data['routes'][0]['legs']
-                .fold(0, (sum, leg) => sum + leg['duration']['value']) /
-            60;
-        distances.add(distance);
-        durations.add(duration);
-      } else {
-        throw Exception('Failed to fetch route');
-      }
-    }
-
-    // Call the OPT2 optimization method after fetching the routes
-    optimizeWithOPT2();
-  }
-
   void optimizeWithOPT2() {
     int n = optimizedOrder.length;
     if (n < 3) return; // OPT2 requires at least 3 stops to perform swaps
@@ -270,8 +219,52 @@ class MyMapController extends GetxController {
     return totalDistance;
   }
 
-  Future<void> refetchFinalRoute() async {
-    await fetchRouteWithBatches(optimizedOrder);
+  Future<void> fetchFinalRoute() async {
+    String? apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'];
+    if (apiKey == null) throw Exception('API key not found');
+
+    List<LatLng> waypoints =
+        optimizedOrder.map((index) => markers[index].position).toList();
+    List<List<LatLng>> waypointBatches = batchWaypoints(waypoints);
+    polylines.clear();
+
+    for (int i = 0; i < waypointBatches.length; i++) {
+      final batch = waypointBatches[i];
+      LatLng origin = batch.first;
+      LatLng destination = batch.last;
+      List<LatLng> intermediateWaypoints = batch.sublist(1, batch.length - 1);
+
+      String waypointsString = intermediateWaypoints
+          .map((point) => '${point.latitude},${point.longitude}')
+          .join('|');
+      final url =
+          'https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&waypoints=$waypointsString&key=$apiKey&optimizeWaypoints=false&departure_time=now';
+
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final points =
+            decodePolyline(data['routes'][0]['overview_polyline']['points']);
+
+        polylines.add(Polyline(
+          polylineId: PolylineId("route_batch_$i"),
+          points: points,
+          color: Colors.blue,
+          width: 4,
+        ));
+
+        final distance = data['routes'][0]['legs']
+                .fold(0, (sum, leg) => sum + leg['distance']['value']) /
+            1000;
+        final duration = data['routes'][0]['legs']
+                .fold(0, (sum, leg) => sum + leg['duration']['value']) /
+            60;
+        distances.add(distance);
+        durations.add(duration);
+      } else {
+        throw Exception('Failed to fetch route');
+      }
+    }
   }
 
   void clearMap() {
@@ -426,11 +419,16 @@ class MyMapController extends GetxController {
                             Get.dialog(
                                 Center(child: CircularProgressIndicator()),
                                 barrierDismissible: false);
-                            optimizeStopOrderUsingNearestNeighbor(); // Step 1
-                            await fetchRouteWithBatches(
-                                optimizedOrder); // Step 2
-                            optimizeWithOPT2(); // Step 3
-                            await refetchFinalRoute(); // Step 4
+
+                            // Step 1: Order stops using Nearest Neighbor
+                            optimizeStopOrderUsingNearestNeighbor();
+
+                            // Step 2: Refine order using OPT2
+                            optimizeWithOPT2();
+
+                            // Step 3: Fetch final route from Google Maps API
+                            await fetchFinalRoute();
+
                             Get.back(); // Dismiss loading dialog
                           } else {
                             Get.snackbar('Insufficient Markers',
