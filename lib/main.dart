@@ -2,6 +2,7 @@ import 'package:darb/Middleware/middleware.dart';
 import 'package:darb/customfunction/logout.dart';
 import 'package:darb/firebase_options.dart';
 import 'package:darb/view/Driver/HomeDriver.dart';
+import 'package:darb/view/Driver/routeMap.dart';
 import 'package:darb/view/Google_Maps_Learn.dart';
 import 'package:darb/view/auth/login.dart';
 import 'package:darb/view/auth/signup.dart';
@@ -48,7 +49,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
       ),
       // initialRoute: "/middleware",
-      home: MapsPage(),
+      home: HomeDriver(),
       getPages: [
         GetPage(
             name: "/middleware",
@@ -60,7 +61,12 @@ class MyApp extends StatelessWidget {
             middlewares: [AuthMiddleware()]),
         GetPage(name: "/login", page: () => Login()),
         GetPage(name: "/signup", page: () => Signup()),
-        GetPage(name: "/DriverMap", page: () => MapsPage()),
+        // GetPage(name: "/DriverMap", page: () => MapsPage()),
+        GetPage(
+            name: "/RouteMap",
+            page: () => RouteMap(
+                  Points: [],
+                )),
         GetPage(name: "/Hdriver", page: () => HomeDriver()),
         GetPage(name: "/Hcustomer", page: () => HomeCustomer()),
         GetPage(name: "/Hcompany", page: () => HomeCompany()),

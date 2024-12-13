@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../controller/driver_controller.dart';
+
 class RouteMap extends StatelessWidget {
   final MyMapController mapController = Get.put(MyMapController());
-  final List
-      Points; //take these point into markers with points info (latlong, name, phone, home image, custom instructions-optional)
+  final List<Point>
+      TripPoints; //take these point into markers with points info (latlong, name, phone, home image, custom instructions-optional)
 
-  RouteMap({super.key, required this.Points});
+  RouteMap({super.key, required this.TripPoints});
   @override
   Widget build(BuildContext context) {
+    mapController.addTripPoints(TripPoints);
     return Scaffold(
       appBar: AppBar(
         title: TextField(

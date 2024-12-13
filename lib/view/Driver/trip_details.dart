@@ -2,6 +2,8 @@ import 'package:darb/controller/driver_controller.dart';
 import 'package:darb/customfunction/select_date.dart';
 import 'package:darb/customfunction/validat.dart';
 import 'package:darb/main.dart';
+import 'package:darb/view/Driver/routeMap.dart';
+import 'package:darb/view/customer/chooslocation.dart';
 import 'package:darb/view/customwedgits/customtextfield.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -94,6 +96,11 @@ class TripDetails extends StatelessWidget {
       label: Row(
         children: [
           InkWell(
+            onTap: () => Get.to(RouteMap(Points: dController.points)),
+            child:
+                Row(children: [Icon(Icons.route_outlined), Text("Go to Map")]),
+          ),
+          InkWell(
             onTap: () async {
               // Validate trip before adding points
               if (tripstate.currentState!.validate()) {
@@ -122,33 +129,22 @@ class TripDetails extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 10),
                                 CustomTextFormField(
-                                  hinttext: "Phone Number/Details",
+                                  hinttext: "Phone Number",
                                   Mycontroller: dController.OTPhone,
                                   keyboardType: TextInputType.phone,
                                   validator: (val) => validinput(val, 1, 700),
                                 ),
                                 const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: CustomTextFormField(
-                                        hinttext: "Location Link",
-                                        Mycontroller: dController.OTlocation,
-                                        validator: (val) =>
-                                            validinput(val, 1, 7600),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: MaterialButton(
-                                        color: Colors.orange,
-                                        onPressed: () {
-                                          // Open map picker logic
-                                        },
-                                        child: const Text("Or choose from map"),
-                                      ),
-                                    ),
-                                  ],
+                                Expanded(
+                                  child: MaterialButton(
+                                    color: Colors.orange,
+                                    onPressed: () {
+                                      // Open map picker logic
+                                      Get.to(() => Chooslocation());
+                                    },
+                                    child:
+                                        const Text("choose location from map"),
+                                  ),
                                 ),
                                 const SizedBox(height: 20),
                                 MaterialButton(

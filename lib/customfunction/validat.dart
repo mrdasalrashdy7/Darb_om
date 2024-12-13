@@ -67,3 +67,33 @@ String? validatePhone(String? val) {
   }
   return null;
 }
+
+String? validateLocation(String? val, controller) {
+  if (val == null || val.isEmpty) {
+    return 'Location cannot be empty';
+  }
+
+  final latLongPattern = RegExp(r'^-?\d+(\.\d+)?,-?\d+(\.\d+)?$');
+  final googleMapsPattern = RegExp(r'@(-?\d+(\.\d+)?),(-?\d+(\.\d+)?)');
+
+  if (latLongPattern.hasMatch(val)) {
+    // Valid latitude/longitude format
+    return null;
+  } else if (googleMapsPattern.hasMatch(val)) {
+    // Extract latitude and longitude from the Google Maps link
+    final match = googleMapsPattern.firstMatch(val);
+    if (match != null) {
+      final latitude = match.group(1);
+      final longitude = match.group(3);
+      if (latitude != null && longitude != null) {
+        // Update the controller with the extracted lat/long
+        controller.text = '$latitude,$longitude';
+        return null;
+      }
+    }
+    return 'Invalid Google Maps link';
+  } else {
+    // Neither lat/long nor Google Maps link
+    return 'Enter a valid latitude/longitude or Google Maps link';
+  }
+}

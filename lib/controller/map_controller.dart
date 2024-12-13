@@ -1,3 +1,4 @@
+import 'package:darb/controller/driver_controller.dart';
 import 'package:darb/services/locationservice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -46,7 +47,39 @@ class MyMapController extends GetxController {
   @override
   void onInit() {
     getLocation();
+
     super.onInit();
+  }
+
+  addTripPoints(List<Point> trippoints) {
+//todo: add markers for trip points
+    for (int i = 0; i < trippoints.length; i++) {
+      markers.add(Marker(
+        markerId: MarkerId([i].toString()),
+        position: trippoints[i].location,
+        infoWindow: InfoWindow(
+          onTap: () {
+            Get.defaultDialog(
+              title: "Customer Info",
+              content: Column(
+                children: [
+                  Image.asset("assets/logo.jpg"),
+                  Text(trippoints[i].name),
+                  InkWell(
+                    child: Text(trippoints[i].details),
+                    onTap: () => Get.snackbar(
+                        "Calling >>>", "Navigating to call this user"),
+                  ),
+                  Text(trippoints[i].details),
+                ],
+              ),
+            );
+          },
+          title: 'Custom Point ${markers.length + 1}',
+          snippet: 'Tap for more info',
+        ),
+      ));
+    }
   }
 
   Future<void> getLocation() async {

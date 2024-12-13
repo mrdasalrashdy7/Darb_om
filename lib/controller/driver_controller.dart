@@ -4,8 +4,8 @@ import 'package:darb/main.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:latlong2/latlong.dart';
 
 class DriverController extends GetxController {
   TextEditingController tripName = TextEditingController();
@@ -14,6 +14,8 @@ class DriverController extends GetxController {
   TextEditingController OTname = TextEditingController();
   TextEditingController OTPhone = TextEditingController();
 
+  var marker = <Marker>[].obs;
+  var initialPosition = const LatLng(23.614328, 58.545284).obs;
 /*
 firbase firstore structure
 
@@ -190,6 +192,20 @@ trips
     fetchTripByDate(DateTime.now());
 
     tripDatecontroller.text = formatDate(DateTime.now());
+  }
+
+  void addCustomPoint(LatLng point) {
+    if (marker.isNotEmpty) {
+      marker[0] = (Marker(
+        markerId: MarkerId(point.toString()),
+        position: point,
+      ));
+    } else {
+      marker.add(Marker(
+        markerId: MarkerId(point.toString()),
+        position: point,
+      ));
+    }
   }
 }
 
