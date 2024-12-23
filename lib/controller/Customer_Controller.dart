@@ -6,14 +6,14 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CustomerController extends GetxController {
-  String? name = prefs!.getString("name");
+  String? name = prefs!.getString("username");
   TextEditingController LocationTitel = TextEditingController();
-  TextEditingController wilaya = TextEditingController();
-  var selectedWilaya = "".obs;
   TextEditingController city = TextEditingController();
   TextEditingController building = TextEditingController();
   TextEditingController custom_instructions = TextEditingController();
+  TextEditingController phoneNo = TextEditingController();
   final GlobalKey<FormState> addform = GlobalKey();
+  var selectedWilaya = "".obs;
 
   var isdefoultlocation = false.obs;
   var marker = <Marker>[].obs;
@@ -29,6 +29,9 @@ class CustomerController extends GetxController {
     super.onInit();
     // Set up a real-time listener for Firestore data
     userLocations.bindStream(locationStream());
+    if (prefs!.getString("phone") != null) {
+      phoneNo.text = prefs!.getString("phone").toString();
+    }
   }
 
   // Real-time stream from Firestore
@@ -41,10 +44,6 @@ class CustomerController extends GetxController {
   }
 
   Future<void> addLocation(GlobalKey<FormState> addform) async {
-    // Validate the form
-    if (addform.currentState == null || !addform.currentState!.validate())
-      return;
-
     // Ensure marker has valid data
     if (marker.isEmpty) {
       Get.snackbar("Error", "Please set a valid location marker");
@@ -55,8 +54,8 @@ class CustomerController extends GetxController {
     Map<String, dynamic> locationData = {
       'userid': userid,
       'title': LocationTitel.text,
-      'phone': prefs?.getString('phone') ?? "unknown",
-      'wilaya': wilaya.text,
+      'phone': phoneNo.text,
+      'wilaya': selectedWilaya.value,
       'city': city.text,
       'building': building.text,
       'custom_instructions': custom_instructions.text,
@@ -97,9 +96,10 @@ class CustomerController extends GetxController {
 
       // Clear text controllers
       LocationTitel.clear();
-      wilaya.clear();
+      selectedWilaya..value = "";
       city.clear();
       building.clear();
+      phoneNo.clear();
       custom_instructions.clear();
       isdefoultlocation.value = false;
     } catch (error) {

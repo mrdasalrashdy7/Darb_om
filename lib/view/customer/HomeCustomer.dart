@@ -3,13 +3,14 @@ import 'package:darb/customfunction/logout.dart';
 import 'package:darb/customfunction/validat.dart';
 import 'package:darb/customfunction/wilaya.dart';
 import 'package:darb/main.dart';
+
 import 'package:darb/view/auth/login.dart';
 import 'package:darb/view/customwedgits/customtextfield.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart';
+
 import 'package:latlong2/latlong.dart';
 import 'package:darb/controller/Customer_Controller.dart';
 
@@ -25,12 +26,6 @@ class HomeCustomer extends StatelessWidget {
         backgroundColor: Colors.orange,
         title: const Text("Customer"),
         actions: [
-          IconButton(
-            onPressed: () {
-              Get.to(() => Login());
-            },
-            icon: const Icon(Icons.login),
-          ),
           IconButton(
             onPressed: () {
               logout();
@@ -195,6 +190,9 @@ class HomeCustomer extends StatelessWidget {
     return FloatingActionButton(
       backgroundColor: Colors.orange,
       onPressed: () {
+        if (prefs!.getString("phone") != null) {
+          Ccontroller.phoneNo.text = prefs!.getString("phone").toString();
+        }
         showDialog(
           context: context,
           builder: (context) {
@@ -215,12 +213,15 @@ class HomeCustomer extends StatelessWidget {
                       CustomTextFormField(
                         hinttext: "القرية",
                         Mycontroller: Ccontroller.city,
-                        validator: (val) => validinput(val, 4, 200),
                       ),
                       CustomTextFormField(
                         hinttext: "المبنى / الطابق",
                         Mycontroller: Ccontroller.building,
-                        validator: (val) => validinput(val, 4, 200),
+                      ),
+                      CustomTextFormField(
+                        hinttext: "هاتف التواصل",
+                        Mycontroller: Ccontroller.phoneNo,
+                        validator: (val) => validatePhone(val),
                       ),
                       CustomTextFormField(
                         minLine: 2,
