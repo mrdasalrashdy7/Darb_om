@@ -48,8 +48,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      // initialRoute: "/middleware",
-      home: HomeCustomer(),
+      initialRoute: "/middleware",
+      // home: HomeCustomer(),
       getPages: [
         GetPage(
             name: "/middleware",

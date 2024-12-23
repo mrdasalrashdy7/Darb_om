@@ -100,6 +100,7 @@ class CustomerController extends GetxController {
       city.clear();
       building.clear();
       phoneNo.clear();
+      marker.clear();
       custom_instructions.clear();
       isdefoultlocation.value = false;
     } catch (error) {

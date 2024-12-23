@@ -26,17 +26,17 @@ class HomeDriver extends StatelessWidget {
       ),
       body: ListView(
         children: [
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           Container(
-            margin: EdgeInsets.all(20),
+            margin: const EdgeInsets.all(20),
             child: Text(
               "Hellow Mr, ${prefs!.getString("username")}",
-              style: TextStyle(fontSize: 18),
+              style: const TextStyle(fontSize: 18),
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 50,
           ),
           Wrap(
@@ -45,12 +45,12 @@ class HomeDriver extends StatelessWidget {
               InkWell(
                 onTap: () => Get.to(() => Trips()),
                 child: Container(
-                  padding: EdgeInsets.all(5),
-                  margin: EdgeInsets.all(5),
+                  padding: const EdgeInsets.all(5),
+                  margin: const EdgeInsets.all(5),
                   color: Colors.orange,
                   width: 150,
                   height: 150,
-                  child: Text(
+                  child: const Text(
                     "Coming trip",
                     style: TextStyle(
                       fontSize: 20,
@@ -65,12 +65,12 @@ class HomeDriver extends StatelessWidget {
                   Get.to(() => TripDetails());
                 },
                 child: Container(
-                  padding: EdgeInsets.all(5),
-                  margin: EdgeInsets.all(5),
+                  padding: const EdgeInsets.all(5),
+                  margin: const EdgeInsets.all(5),
                   color: Colors.orange,
                   width: 150,
                   height: 150,
-                  child: Text(
+                  child: const Text(
                     "next trip",
                     style: TextStyle(
                       fontSize: 20,
@@ -81,12 +81,12 @@ class HomeDriver extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: EdgeInsets.all(5),
-                margin: EdgeInsets.all(5),
+                padding: const EdgeInsets.all(5),
+                margin: const EdgeInsets.all(5),
                 color: Colors.orange,
                 width: 150,
                 height: 150,
-                child: Text(
+                child: const Text(
                   "my accouunt",
                   style: TextStyle(
                     fontSize: 20,
@@ -98,12 +98,12 @@ class HomeDriver extends StatelessWidget {
               InkWell(
                 onTap: () => Get.to(() => HomeCustomer()),
                 child: Container(
-                  padding: EdgeInsets.all(5),
-                  margin: EdgeInsets.all(5),
+                  padding: const EdgeInsets.all(5),
+                  margin: const EdgeInsets.all(5),
                   color: Colors.orange,
                   width: 150,
                   height: 150,
-                  child: Text(
+                  child: const Text(
                     "Go to Map",
                     style: TextStyle(
                       fontSize: 20,

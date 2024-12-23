@@ -13,6 +13,11 @@ class DriverController extends GetxController {
   TextEditingController OTlocation = TextEditingController();
   TextEditingController OTname = TextEditingController();
   TextEditingController OTPhone = TextEditingController();
+  //fields for search by phone
+  TextEditingController searchPhone = TextEditingController();
+  var customerinfo =
+      {}.obs; //{"name": "n***e", "phone": "phone", "city":"city"}
+  var tripid = "".obs;
 
   var marker = <Marker>[].obs;
   var initialPosition = const LatLng(23.614328, 58.545284).obs;
@@ -52,25 +57,42 @@ trips
 
   // Save trip and get trip ID
   Future<void> saveTrip() async {
-    if (tripId.value.isNotEmpty) return; // Trip already saved
+    // Generate a unique trip ID
+    final tripIdValue =
+        "${prefs!.getString("phone")}_${DateTime.now().millisecondsSinceEpoch}";
+    tripid.value = tripIdValue;
+
+    if (tripId.value.isNotEmpty) {
+      // If a trip is already saved, do not proceed
+      Get.snackbar("Info", "Trip already saved!");
+      tripid.value = tripIdValue;
+      return;
+    }
 
     try {
       isLoading.value = true;
-      var docRef = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(prefs!.getString("userid"))
+
+      // Save trip details in the trips collection
+      await FirebaseFirestore.instance
           .collection("trips")
-          .add({
+          .doc(tripIdValue)
+          .set({
         "name": tripName.text,
         "date": Timestamp.fromDate(tripDate.value),
         "createdAt": FieldValue.serverTimestamp(),
+        "driverid": prefs!.getString("userid"),
+        "tripid": tripIdValue,
       });
 
-      tripId.value = docRef.id; // Save the trip ID
+      // Set the trip ID locally
+      tripId.value = tripIdValue;
+
       isLoading.value = false;
+
+      Get.snackbar("Success", "Trip saved successfully!");
     } catch (e) {
-      Get.snackbar("Error", "Failed to save trip: $e");
       isLoading.value = false;
+      Get.snackbar("Error", "Failed to save trip: $e");
     }
   }
 
@@ -101,8 +123,6 @@ trips
       };
 
       await FirebaseFirestore.instance
-          .collection("users")
-          .doc(prefs!.getString("userid"))
           .collection("trips")
           .doc(tripId.value)
           .collection("points")
@@ -121,16 +141,57 @@ trips
     }
   }
 
+  addPointFromSearch(
+      String name, String details, String latitude, String longitude) async {
+    if (tripId.value.isEmpty) {
+      Get.snackbar("Error", "Please save the trip before adding points.");
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      double latitude1 = double.parse(latitude);
+      double longitude1 = double.parse(longitude);
+
+      var point = Point(
+        name: name,
+        details: details,
+        location: LatLng(latitude1, longitude1),
+      );
+      print("the latlong is $point");
+
+      Map<String, dynamic> locationData = {
+        "name": point.name,
+        "phone": point.details,
+        "latlong": GeoPoint(latitude1, longitude1),
+      };
+
+      await FirebaseFirestore.instance
+          .collection("trips")
+          .doc(tripid.value)
+          .collection("points")
+          .add(locationData);
+
+      points.add(point); // Update local list
+      isLoading.value = false;
+    } catch (e) {
+      Get.snackbar("Error", "Failed to add point: $e");
+      print(" the erroer from marker $marker");
+      print("The customer info is: ${customerinfo}");
+      print("tripid.value: ${tripid.value}");
+
+      isLoading.value = false;
+    }
+  }
+
   Future<void> fetchTripByDate(DateTime date) async {
     try {
       isLoading.value = true;
 
       // Query Firestore for a trip with the given date
       QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(prefs!.getString("userid"))
           .collection("trips")
-          .where("date", isEqualTo: Timestamp.fromDate(date))
+          .where("tripid", isEqualTo: tripid.value)
           .limit(1)
           .get();
 
@@ -165,10 +226,8 @@ trips
       isLoading.value = true;
 
       QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(prefs!.getString("userid"))
           .collection("trips")
-          .doc(tripId)
+          .doc(tripid.value)
           .collection("points")
           .get();
 
@@ -187,6 +246,57 @@ trips
       Get.snackbar("Error", "Failed to fetch points: $e");
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> searchCustomerByPhone() async {
+    try {
+      // Clear previous results
+      customerinfo.clear();
+
+      // Query the location collection by phone number
+      var locationQuery = await FirebaseFirestore.instance
+          .collection("location")
+          .where("phone", isEqualTo: searchPhone.text)
+          .get();
+
+      if (locationQuery.docs.isNotEmpty) {
+        var locationData = locationQuery.docs.first.data();
+        String userId = locationData['userid'];
+
+        // Query the customer collection by userid
+        var customerQuery = await FirebaseFirestore.instance
+            .collection("users")
+            .doc(userId)
+            .get();
+
+        if (customerQuery.exists) {
+          var customerData = customerQuery.data();
+
+          // Extract GeoPoint fields explicitly
+          GeoPoint latlong = locationData['latlong'];
+
+          // Combine the data from both collections
+          customerinfo.value = {
+            'userid': userId,
+            'phone': locationData['phone'],
+            'latlong': latlong, // Keep GeoPoint for further processing
+            'latitude': latlong.latitude.toString(), // Add latitude explicitly
+            'longitude':
+                latlong.longitude.toString(), // Add longitude explicitly
+            'name': customerData?['name'] ?? "Unknown",
+            'city': locationData['city'],
+          };
+
+          print("Customer Information: ${customerinfo}");
+        } else {
+          Get.snackbar("Error", "Customer not found.");
+        }
+      } else {
+        Get.snackbar("Error", "Location not found.");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Failed to fetch data: $e");
     }
   }
 

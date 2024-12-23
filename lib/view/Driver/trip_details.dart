@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:darb/controller/driver_controller.dart';
 import 'package:darb/customfunction/select_date.dart';
 import 'package:darb/customfunction/validat.dart';
+import 'package:darb/functions/anonymizeName.dart';
 import 'package:darb/main.dart';
 import 'package:darb/view/Driver/chooseCustomerLocation.dart';
 import 'package:darb/view/Driver/routeMap.dart';
@@ -106,6 +108,80 @@ class TripDetails extends StatelessWidget {
               )
             ]),
           ),
+          Container(
+            height: 30,
+            width: 2,
+            color: Colors.orange,
+            margin: EdgeInsets.symmetric(horizontal: 4),
+          ),
+          InkWell(
+              child: Row(
+                children: [
+                  Text("search customer",
+                      style: TextStyle(color: Colors.orange)),
+                  const Icon(Icons.search, color: Colors.orange),
+                ],
+              ),
+              onTap: () async {
+                if (tripstate.currentState!.validate()) {
+                  await dController.saveTrip();
+
+                  Get.defaultDialog(
+                    title: "Search Location by Phone",
+                    content: Obx(() => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CustomTextFormField(
+                              hinttext: "Phone number",
+                              Mycontroller: dController.searchPhone,
+                              validator: validatePhone,
+                            ),
+                            SizedBox(height: 10),
+                            MaterialButton(
+                              onPressed: () async {
+                                FocusScope.of(context).unfocus();
+                                dController.searchCustomerByPhone();
+                              },
+                              child: Text(dController.customerinfo.isEmpty
+                                  ? "Find Customer"
+                                  : "Search Again"),
+                            ),
+                            if (dController.customerinfo.isNotEmpty)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  MaterialButton(
+                                    onPressed: () async {
+                                      await dController.addPointFromSearch(
+                                        dController.customerinfo['name'],
+                                        dController.customerinfo['phone'],
+                                        dController.customerinfo['latitude']
+                                            .toString(),
+                                        dController.customerinfo['longitude']
+                                            .toString(),
+                                      );
+                                    },
+                                    child: Text("Save Location"),
+                                  ),
+                                  SizedBox(height: 10),
+                                  Text(
+                                    "Customer Info",
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                      "Name: ${anonymizeName(dController.customerinfo['name'])}"),
+                                  Text(
+                                      "City: ${dController.customerinfo['city']}"),
+                                ],
+                              ),
+                          ],
+                        )),
+                  );
+                } else {
+                  Get.snackbar("Error", "Please fill out trip details first.");
+                }
+              }),
           Container(
             height: 30,
             width: 2,
