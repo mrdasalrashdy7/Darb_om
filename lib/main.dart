@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
       ),
       // initialRoute: "/middleware",
-      home: HomeDriver(),
+      home: HomeCustomer(),
       getPages: [
         GetPage(
             name: "/middleware",
@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
         GetPage(
             name: "/RouteMap",
             page: () => RouteMap(
-                  Points: [],
+                  TripPoints: [],
                 )),
         GetPage(name: "/Hdriver", page: () => HomeDriver()),
         GetPage(name: "/Hcustomer", page: () => HomeCustomer()),

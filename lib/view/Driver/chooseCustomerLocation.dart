@@ -7,8 +7,8 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class Chooslocation extends StatelessWidget {
-  Chooslocation({super.key});
+class ChooslocationDriver extends StatelessWidget {
+  ChooslocationDriver({super.key});
   DriverController dcontroller = Get.put(DriverController());
   cooslocationcontroller czcontroller = Get.put(cooslocationcontroller());
 

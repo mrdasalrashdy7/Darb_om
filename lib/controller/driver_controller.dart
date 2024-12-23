@@ -30,17 +30,19 @@ locations
   -phone
   -userid
   -location
-  -discription
-  -status
+  -latlong
+  -custom_instructions
+  -is_default
 
 trips
   -titel
   -date
   -driverid
   -points
-    -name
     -status
     -lcationid
+    -name (optional)
+    -order(optemized order)
   
 */
   Rx<DateTime> tripDate = DateTime.now().obs;
@@ -91,13 +93,20 @@ trips
         location: LatLng(latitude, longitude),
       );
 
+      Map<String, dynamic> locationData = {
+        "name": point.name,
+        "phone": point.details,
+        "latlong":
+            GeoPoint(marker[0].position.latitude, marker[0].position.longitude),
+      };
+
       await FirebaseFirestore.instance
           .collection("users")
           .doc(prefs!.getString("userid"))
           .collection("trips")
           .doc(tripId.value)
           .collection("points")
-          .add(point.toMap());
+          .add(locationData);
 
       points.add(point); // Update local list
       OTname.clear();
@@ -106,6 +115,8 @@ trips
       isLoading.value = false;
     } catch (e) {
       Get.snackbar("Error", "Failed to add point: $e");
+      print(" the erroer from marker $marker");
+
       isLoading.value = false;
     }
   }

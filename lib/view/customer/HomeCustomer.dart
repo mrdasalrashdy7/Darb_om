@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:darb/customfunction/logout.dart';
 import 'package:darb/customfunction/validat.dart';
+import 'package:darb/customfunction/wilaya.dart';
 import 'package:darb/main.dart';
 import 'package:darb/view/auth/login.dart';
 import 'package:darb/view/customwedgits/customtextfield.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
@@ -14,7 +16,6 @@ import 'package:darb/controller/Customer_Controller.dart';
 class HomeCustomer extends StatelessWidget {
   HomeCustomer({super.key});
   final CustomerController Ccontroller = Get.put(CustomerController());
-  final GlobalKey<FormState> addform = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -198,61 +199,59 @@ class HomeCustomer extends StatelessWidget {
           context: context,
           builder: (context) {
             return AlertDialog(
-              title: const Text("Add Location"),
+              title: const Text("أضف موقع"),
               content: SingleChildScrollView(
                 child: Form(
-                  key: GlobalKey<FormState>(),
+                  key: Ccontroller.addform,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       CustomTextFormField(
-                        hinttext: "Title",
+                        hinttext: "تسمية الموقع",
                         Mycontroller: Ccontroller.LocationTitel,
                         validator: (val) => validinput(val, 4, 200),
                       ),
+                      Select_wilaya(),
                       CustomTextFormField(
-                        hinttext: "Wilayah",
-                        Mycontroller: Ccontroller.wilaya,
-                        validator: (val) => validinput(val, 4, 200),
-                      ),
-                      CustomTextFormField(
-                        hinttext: "City",
+                        hinttext: "القرية",
                         Mycontroller: Ccontroller.city,
                         validator: (val) => validinput(val, 4, 200),
                       ),
                       CustomTextFormField(
-                        hinttext: "Building",
+                        hinttext: "المبنى / الطابق",
                         Mycontroller: Ccontroller.building,
                         validator: (val) => validinput(val, 4, 200),
                       ),
                       CustomTextFormField(
-                        hinttext: "Custom Instructions",
+                        minLine: 2,
+                        maxLine: 3,
+                        hinttext: "تعليمات الموقع",
                         Mycontroller: Ccontroller.custom_instructions,
                       ),
                       const SizedBox(height: 10),
-                      MaterialButton(
-                        color: Ccontroller.marker.isEmpty
-                            ? Colors.grey
-                            : Colors.orange,
-                        onPressed: () {
-                          Navigator.pop(
-                              context); // Close dialog before navigation
-                          Get.toNamed("clocation");
-                        },
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.map),
-                            SizedBox(width: 8),
-                            Text("Choose Location"),
-                          ],
-                        ),
-                      ),
+                      Obx(() => MaterialButton(
+                            color: Ccontroller.marker.isEmpty
+                                ? Colors.grey
+                                : Colors.orange,
+                            onPressed: () {
+                              Get.toNamed("clocation");
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.map),
+                                SizedBox(width: 8),
+                                Text(Ccontroller.marker.isEmpty
+                                    ? "اختر موقع"
+                                    : "حدث الموقع"),
+                              ],
+                            ),
+                          )),
                       Obx(
                         () => Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text("default location"),
+                            const Text("موقعي الافتراضي"),
                             Checkbox(
                               value: Ccontroller.isdefoultlocation.value,
                               onChanged: (val) {
@@ -267,12 +266,20 @@ class HomeCustomer extends StatelessWidget {
                       MaterialButton(
                         color: Colors.orange,
                         onPressed: () {
-                          Ccontroller.addLocation(
-                              addform); // Call the controller method
-                          Navigator.pop(context); // Close the dialog
+                          if (Ccontroller.addform.currentState!.validate()) {
+                            try {
+                              Ccontroller.addLocation(Ccontroller.addform);
+                              Get.back();
+                            } catch (e) {
+                              Get.defaultDialog(title: "Error in save: $e ");
+                              print("Error in save locationm $e");
+                            }
+                          } else {
+                            print("Erorrrrrrrrrrrrrrrr");
+                          }
                         },
                         child: const Text(
-                          "Add Location",
+                          "أضف الموقع",
                           style: TextStyle(fontSize: 20, color: Colors.white),
                         ),
                       ),
@@ -290,6 +297,28 @@ class HomeCustomer extends StatelessWidget {
         Icons.add_location_alt_outlined,
         color: Colors.white,
       ),
+    );
+  }
+
+  DropdownSearch<String> Select_wilaya() {
+    return DropdownSearch<String>(
+      selectedItem: Ccontroller.selectedWilaya.value,
+      items: (filter, infiniteScrollProps) => Wilayat,
+      onChanged: (value) {
+        Ccontroller.selectedWilaya.value = value.toString();
+      },
+      decoratorProps: DropDownDecoratorProps(
+        decoration: InputDecoration(
+          labelText: "الولاية",
+          border: OutlineInputBorder(),
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return "اختر ولاية";
+        }
+        return null;
+      },
     );
   }
 }

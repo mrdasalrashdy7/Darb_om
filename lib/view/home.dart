@@ -1,3 +1,4 @@
+import 'package:darb/view/Driver/routeMap.dart';
 import 'package:darb/view/maps.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -21,7 +22,9 @@ class _HomePageState extends State<HomePage> {
           children: [
             ElevatedButton(
               onPressed: () {
-                Get.to(() => MapsPage()); // Navigate to the MapsPage
+                Get.to(() => RouteMap(
+                      TripPoints: [],
+                    )); // Navigate to the MapsPage
               },
               child: Text('Go to Maps'),
             ),

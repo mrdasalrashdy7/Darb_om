@@ -2,6 +2,7 @@ import 'package:darb/controller/driver_controller.dart';
 import 'package:darb/customfunction/select_date.dart';
 import 'package:darb/customfunction/validat.dart';
 import 'package:darb/main.dart';
+import 'package:darb/view/Driver/chooseCustomerLocation.dart';
 import 'package:darb/view/Driver/routeMap.dart';
 import 'package:darb/view/customer/chooslocation.dart';
 import 'package:darb/view/customwedgits/customtextfield.dart';
@@ -65,7 +66,7 @@ class TripDetails extends StatelessWidget {
                 ? CircularProgressIndicator()
                 : dController.points.isEmpty
                     ? Center(child: Text("No points added yet."))
-                    : Expanded(
+                    : Flexible(
                         child: ListView.builder(
                           itemCount: dController.points.length,
                           itemBuilder: (context, index) {
@@ -96,9 +97,20 @@ class TripDetails extends StatelessWidget {
       label: Row(
         children: [
           InkWell(
-            onTap: () => Get.to(RouteMap(Points: dController.points)),
-            child:
-                Row(children: [Icon(Icons.route_outlined), Text("Go to Map")]),
+            onTap: () => Get.to(RouteMap(TripPoints: dController.points)),
+            child: Row(children: [
+              Icon(Icons.route_outlined, color: Colors.orange),
+              Text(
+                "Go to Map",
+                style: TextStyle(color: Colors.orange),
+              )
+            ]),
+          ),
+          Container(
+            height: 30,
+            width: 2,
+            color: Colors.orange,
+            margin: EdgeInsets.symmetric(horizontal: 4),
           ),
           InkWell(
             onTap: () async {
@@ -135,16 +147,13 @@ class TripDetails extends StatelessWidget {
                                   validator: (val) => validinput(val, 1, 700),
                                 ),
                                 const SizedBox(height: 10),
-                                Expanded(
-                                  child: MaterialButton(
-                                    color: Colors.orange,
-                                    onPressed: () {
-                                      // Open map picker logic
-                                      Get.to(() => Chooslocation());
-                                    },
-                                    child:
-                                        const Text("choose location from map"),
-                                  ),
+                                MaterialButton(
+                                  color: Colors.orange,
+                                  onPressed: () {
+                                    // Open map picker logic
+                                    Get.to(() => ChooslocationDriver());
+                                  },
+                                  child: const Text("choose location from map"),
                                 ),
                                 const SizedBox(height: 20),
                                 MaterialButton(

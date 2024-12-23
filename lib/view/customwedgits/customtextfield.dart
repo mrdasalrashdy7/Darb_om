@@ -8,6 +8,8 @@ class CustomTextFormField extends StatelessWidget {
   final bool obscuretext;
   Function(String)? onchange;
   void Function()? OnTap;
+  final int minLine;
+  final int maxLine;
 
   CustomTextFormField(
       {super.key,
@@ -17,6 +19,8 @@ class CustomTextFormField extends StatelessWidget {
       this.keyboardType,
       this.onchange,
       this.OnTap,
+      this.minLine = 1,
+      this.maxLine = 1,
       this.obscuretext = false});
 
   @override
@@ -37,6 +41,8 @@ class CustomTextFormField extends StatelessWidget {
             ),
           ),
           TextFormField(
+              minLines: minLine,
+              maxLines: maxLine,
               onTap: OnTap,
               keyboardType: keyboardType,
               onChanged: onchange,

@@ -46,11 +46,13 @@ class LoginController extends GetxController {
       // Safely fetch role and name
       String role = userData['role'] ?? 'Student';
       String name = userData['name'] ?? 'Unknown';
+      String phone = userData['phone'] ?? 'Unknown';
 
       // Store data in shared preferences
       await prefs?.setString("role", role);
       await prefs?.setString("username", name);
       await prefs?.setString("userid", uid);
+      await prefs?.setString("phone", phone);
 
       // Navigate to home page
       Get.offNamed("home");
