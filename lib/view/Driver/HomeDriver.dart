@@ -9,7 +9,7 @@ import 'package:get/get.dart';
 
 class HomeDriver extends StatelessWidget {
   HomeDriver({super.key});
-  DriverController Dcontroller = Get.put(DriverController());
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,7 +51,7 @@ class HomeDriver extends StatelessWidget {
                   width: 150,
                   height: 150,
                   child: const Text(
-                    "Coming trip",
+                    "my trips",
                     style: TextStyle(
                       fontSize: 20,
                       color: Colors.white,

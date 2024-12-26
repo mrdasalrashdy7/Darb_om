@@ -3,6 +3,8 @@ import 'package:darb/customfunction/logout.dart';
 import 'package:darb/firebase_options.dart';
 import 'package:darb/view/Driver/HomeDriver.dart';
 import 'package:darb/view/Driver/routeMap.dart';
+import 'package:darb/view/Driver/trip_details.dart';
+import 'package:darb/view/Driver/trips.dart';
 import 'package:darb/view/Google_Maps_Learn.dart';
 import 'package:darb/view/auth/login.dart';
 import 'package:darb/view/auth/signup.dart';
@@ -71,6 +73,8 @@ class MyApp extends StatelessWidget {
         GetPage(name: "/Hcustomer", page: () => HomeCustomer()),
         GetPage(name: "/Hcompany", page: () => HomeCompany()),
         GetPage(name: "/clocation", page: () => Chooslocation()),
+        GetPage(name: "/mytrips", page: () => Trips()),
+        GetPage(name: "/tripdetails", page: () => TripDetails()),
       ],
     );
   }

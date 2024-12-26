@@ -10,6 +10,7 @@ class CustomTextFormField extends StatelessWidget {
   void Function()? OnTap;
   final int minLine;
   final int maxLine;
+  final bool isenable;
 
   CustomTextFormField(
       {super.key,
@@ -21,6 +22,7 @@ class CustomTextFormField extends StatelessWidget {
       this.OnTap,
       this.minLine = 1,
       this.maxLine = 1,
+      this.isenable = true,
       this.obscuretext = false});
 
   @override
@@ -41,6 +43,7 @@ class CustomTextFormField extends StatelessWidget {
             ),
           ),
           TextFormField(
+              enabled: isenable,
               minLines: minLine,
               maxLines: maxLine,
               onTap: OnTap,

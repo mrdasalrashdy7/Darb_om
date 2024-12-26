@@ -3,14 +3,11 @@ import 'package:darb/controller/driver_controller.dart';
 import 'package:darb/customfunction/select_date.dart';
 import 'package:darb/customfunction/validat.dart';
 import 'package:darb/functions/anonymizeName.dart';
-import 'package:darb/main.dart';
 import 'package:darb/view/Driver/chooseCustomerLocation.dart';
 import 'package:darb/view/Driver/routeMap.dart';
-import 'package:darb/view/customer/chooslocation.dart';
 import 'package:darb/view/customwedgits/customtextfield.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 class TripDetails extends StatelessWidget {
   TripDetails({super.key});
@@ -38,6 +35,7 @@ class TripDetails extends StatelessWidget {
                 Expanded(
                   flex: 6,
                   child: CustomTextFormField(
+                    isenable: false,
                     Mycontroller: dController.tripName,
                     hinttext: "Trip Name",
                     validator: (val) => validinput(val, 3, 200),
@@ -46,6 +44,7 @@ class TripDetails extends StatelessWidget {
                 Expanded(
                   flex: 5,
                   child: CustomTextFormField(
+                    isenable: false,
                     Mycontroller: dController.tripDatecontroller,
                     keyboardType: TextInputType.datetime,
                     OnTap: () async {
@@ -66,26 +65,62 @@ class TripDetails extends StatelessWidget {
           Obx(
             () => dController.isLoading.value
                 ? CircularProgressIndicator()
-                : dController.points.isEmpty
-                    ? Center(child: Text("No points added yet."))
-                    : Flexible(
-                        child: ListView.builder(
-                          itemCount: dController.points.length,
+                : Flexible(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('trips')
+                          .doc(dController
+                              .tripId.value) // Use the selected trip ID
+                          .collection('points')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          return Center(
+                            child: Text('No points added yet.'),
+                          );
+                        }
+
+                        final points = snapshot.data!.docs;
+
+                        return ListView.builder(
+                          itemCount: points.length,
                           itemBuilder: (context, index) {
-                            final point = dController.points[index];
+                            print("the points are $points");
+                            final pointData =
+                                points[index].data() as Map<String, dynamic>;
+                            final pointName =
+                                pointData['name'] ?? 'Unnamed Point';
+                            final pointDetails =
+                                pointData['phone'] ?? 'No details available';
+
                             return ListTile(
-                              title: Text(point.name),
-                              subtitle: Text(point.details),
+                              title: Text(pointName),
+                              subtitle: Text(pointDetails),
                               trailing: IconButton(
                                 icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  // Delete logic here
+                                onPressed: () async {
+                                  // Delete the point from Firestore
+                                  await FirebaseFirestore.instance
+                                      .collection('trips')
+                                      .doc(dController.tripId.value)
+                                      .collection('points')
+                                      .doc(points[index].id)
+                                      .delete();
+                                  Get.snackbar(
+                                      "Success", "Point deleted successfully");
                                 },
                               ),
                             );
                           },
-                        ),
-                      ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -124,8 +159,6 @@ class TripDetails extends StatelessWidget {
               ),
               onTap: () async {
                 if (tripstate.currentState!.validate()) {
-                  await dController.saveTrip();
-
                   Get.defaultDialog(
                     title: "Search Location by Phone",
                     content: Obx(() => Column(
@@ -192,7 +225,6 @@ class TripDetails extends StatelessWidget {
             onTap: () async {
               // Validate trip before adding points
               if (tripstate.currentState!.validate()) {
-                await dController.saveTrip(); // Save trip if form is valid
                 showDialog(
                   context: context,
                   builder: (context) {

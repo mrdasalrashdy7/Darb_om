@@ -17,7 +17,6 @@ class DriverController extends GetxController {
   TextEditingController searchPhone = TextEditingController();
   var customerinfo =
       {}.obs; //{"name": "n***e", "phone": "phone", "city":"city"}
-  var tripid = "".obs;
 
   var marker = <Marker>[].obs;
   var initialPosition = const LatLng(23.614328, 58.545284).obs;
@@ -58,16 +57,8 @@ trips
   // Save trip and get trip ID
   Future<void> saveTrip() async {
     // Generate a unique trip ID
-    final tripIdValue =
+    tripId.value =
         "${prefs!.getString("phone")}_${DateTime.now().millisecondsSinceEpoch}";
-    tripid.value = tripIdValue;
-
-    if (tripId.value.isNotEmpty) {
-      // If a trip is already saved, do not proceed
-      Get.snackbar("Info", "Trip already saved!");
-      tripid.value = tripIdValue;
-      return;
-    }
 
     try {
       isLoading.value = true;
@@ -75,17 +66,14 @@ trips
       // Save trip details in the trips collection
       await FirebaseFirestore.instance
           .collection("trips")
-          .doc(tripIdValue)
+          .doc(tripId.value)
           .set({
         "name": tripName.text,
         "date": Timestamp.fromDate(tripDate.value),
         "createdAt": FieldValue.serverTimestamp(),
         "driverid": prefs!.getString("userid"),
-        "tripid": tripIdValue,
+        "tripId": tripId.value,
       });
-
-      // Set the trip ID locally
-      tripId.value = tripIdValue;
 
       isLoading.value = false;
 
@@ -168,7 +156,7 @@ trips
 
       await FirebaseFirestore.instance
           .collection("trips")
-          .doc(tripid.value)
+          .doc(tripId.value)
           .collection("points")
           .add(locationData);
 
@@ -178,7 +166,7 @@ trips
       Get.snackbar("Error", "Failed to add point: $e");
       print(" the erroer from marker $marker");
       print("The customer info is: ${customerinfo}");
-      print("tripid.value: ${tripid.value}");
+      print("tripId.value: ${tripId.value}");
 
       isLoading.value = false;
     }
@@ -191,7 +179,7 @@ trips
       // Query Firestore for a trip with the given date
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection("trips")
-          .where("tripid", isEqualTo: tripid.value)
+          .where("tripId", isEqualTo: tripId.value)
           .limit(1)
           .get();
 
@@ -227,7 +215,7 @@ trips
 
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection("trips")
-          .doc(tripid.value)
+          .doc(tripId)
           .collection("points")
           .get();
 
@@ -293,11 +281,20 @@ trips
           Get.snackbar("Error", "Customer not found.");
         }
       } else {
-        Get.snackbar("Error", "Location not found.");
+        Get.snackbar("Error", "phone not found.");
       }
     } catch (e) {
       Get.snackbar("Error", "Failed to fetch data: $e");
     }
+  }
+
+  Future<int> getPointsCount(String tripId) async {
+    final pointsSnapshot = await FirebaseFirestore.instance
+        .collection('trips')
+        .doc(tripId)
+        .collection('points')
+        .get();
+    return pointsSnapshot.docs.length;
   }
 
   @override
@@ -366,51 +363,5 @@ class Point {
         "longitude": location.longitude,
       },
     };
-  }
-}
-
-// Method to save trip and its points to Firestore
-Future<void> saveTripWithPointsToFirebase(
-  String userId,
-  String tripName,
-  String tripDate,
-  List<Point> points,
-) async {
-  try {
-    // Ensure the userId, tripName, and tripDate are valid
-    if (userId.isEmpty || tripName.isEmpty || tripDate.isEmpty) {
-      throw Exception("User ID, Trip Name, and Trip Date cannot be empty.");
-    }
-
-    // Reference to the trips collection in Firestore
-    CollectionReference tripsCollection = FirebaseFirestore.instance
-        .collection("users")
-        .doc(userId)
-        .collection("trips");
-
-    // Add trip document
-    DocumentReference tripDocRef = await tripsCollection.add({
-      "tripName": tripName,
-      "tripDate": tripDate,
-      "createdAt": FieldValue.serverTimestamp(),
-    });
-
-    // Reference to the points collection under the trip
-    CollectionReference pointsCollection = tripDocRef.collection("points");
-
-    // Batch write for efficiency
-    WriteBatch batch = FirebaseFirestore.instance.batch();
-
-    for (Point point in points) {
-      DocumentReference docRef = pointsCollection.doc(); // Generate unique ID
-      batch.set(docRef, point.toMap()); // Add the point to the batch
-    }
-
-    // Commit the batch
-    await batch.commit();
-
-    print("Trip and points saved successfully!");
-  } catch (e) {
-    print("Failed to save trip and points: $e");
   }
 }
