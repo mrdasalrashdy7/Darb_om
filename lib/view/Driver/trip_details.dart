@@ -272,7 +272,6 @@ class TripDetails extends StatelessWidget {
                                     await dController.addPoint(
                                       dController.OTname.text,
                                       dController.OTPhone.text,
-                                      dController.OTlocation.text,
                                     );
                                     Navigator.pop(context); // Close dialog
                                   },

@@ -85,46 +85,60 @@ trips
   }
 
   // Add point to Firestore under the saved trip
-  Future<void> addPoint(String name, String details, String location) async {
+  Future<void> addPoint(String name, String details) async {
     if (tripId.value.isEmpty) {
       Get.snackbar("Error", "Please save the trip before adding points.");
+      return;
+    }
+
+    // Ensure marker is not empty
+    if (marker.isEmpty) {
+      Get.snackbar("Error", "Please select a location on the map.");
       return;
     }
 
     try {
       isLoading.value = true;
 
-      double latitude = double.parse(location.split(',').first.trim());
-      double longitude = double.parse(location.split(',').last.trim());
+      // Extract marker position
+      final latitude = marker[0].position.latitude;
+      final longitude = marker[0].position.longitude;
 
+      // Create the Point object
       var point = Point(
         name: name,
         details: details,
         location: LatLng(latitude, longitude),
       );
 
+      // Prepare location data for Firestore
       Map<String, dynamic> locationData = {
         "name": point.name,
-        "phone": point.details,
-        "latlong":
-            GeoPoint(marker[0].position.latitude, marker[0].position.longitude),
+        "details": point.details,
+        "latlong": GeoPoint(latitude, longitude),
       };
 
+      // Save to Firestore
       await FirebaseFirestore.instance
           .collection("trips")
           .doc(tripId.value)
           .collection("points")
           .add(locationData);
 
-      points.add(point); // Update local list
+      // Add the point to the local list
+      points.add(point);
+
+      // Clear input fields and marker
       OTname.clear();
       OTPhone.clear();
-      OTlocation.clear();
+      marker.clear();
+
       isLoading.value = false;
+
+      Get.snackbar("Success", "Point added successfully!");
     } catch (e) {
       Get.snackbar("Error", "Failed to add point: $e");
-      print(" the erroer from marker $marker");
-
+      print("Error from addPoint: $e");
       isLoading.value = false;
     }
   }
@@ -141,33 +155,36 @@ trips
       double latitude1 = double.parse(latitude);
       double longitude1 = double.parse(longitude);
 
+      // Create the Point object
       var point = Point(
         name: name,
         details: details,
         location: LatLng(latitude1, longitude1),
       );
-      print("the latlong is $point");
 
+      // Prepare location data for Firestore
       Map<String, dynamic> locationData = {
         "name": point.name,
-        "phone": point.details,
+        "details": point.details,
         "latlong": GeoPoint(latitude1, longitude1),
       };
 
+      // Save to Firestore
       await FirebaseFirestore.instance
           .collection("trips")
           .doc(tripId.value)
           .collection("points")
           .add(locationData);
 
-      points.add(point); // Update local list
+      // Add the point to the local list
+      points.add(point);
+
       isLoading.value = false;
+
+      Get.snackbar("Success", "Point added successfully!");
     } catch (e) {
       Get.snackbar("Error", "Failed to add point: $e");
-      print(" the erroer from marker $marker");
-      print("The customer info is: ${customerinfo}");
-      print("tripId.value: ${tripId.value}");
-
+      print("Error from addPointFromSearch: $e");
       isLoading.value = false;
     }
   }
