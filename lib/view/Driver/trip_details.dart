@@ -90,7 +90,6 @@ class TripDetails extends StatelessWidget {
                         return ListView.builder(
                           itemCount: points.length,
                           itemBuilder: (context, index) {
-                            print("the points are $points");
                             final pointData =
                                 points[index].data() as Map<String, dynamic>;
                             final pointName =
@@ -134,7 +133,12 @@ class TripDetails extends StatelessWidget {
       label: Row(
         children: [
           InkWell(
-            onTap: () => Get.to(RouteMap(TripPoints: dController.points)),
+            onTap: () {
+              dController.fechpoints_Map();
+
+              print("the points are ${dController.points.length}");
+              Get.to(RouteMap(TripPoints: dController.points));
+            },
             child: Row(children: [
               Icon(Icons.route_outlined, color: Colors.orange),
               Text(

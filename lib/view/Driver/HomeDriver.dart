@@ -62,7 +62,7 @@ class HomeDriver extends StatelessWidget {
               ),
               InkWell(
                 onTap: () {
-                  Get.to(() => TripDetails());
+                  // Get.to(() => TripDetails());
                 },
                 child: Container(
                   padding: const EdgeInsets.all(5),
@@ -104,7 +104,7 @@ class HomeDriver extends StatelessWidget {
                   width: 150,
                   height: 150,
                   child: const Text(
-                    "Go to Map",
+                    "My locations",
                     style: TextStyle(
                       fontSize: 20,
                       color: Colors.white,

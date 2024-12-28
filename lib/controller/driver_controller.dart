@@ -84,8 +84,43 @@ trips
     }
   }
 
+  Future<void> fechpoints_Map() async {
+    if (tripId.value.isEmpty) {
+      Get.snackbar("Error", "Please save the trip before fetching points.");
+      return;
+    }
+
+    try {
+      // Fetch points from Firestore
+      final snapshot = await FirebaseFirestore.instance
+          .collection("trips")
+          .doc(tripId.value)
+          .collection("points")
+          .get();
+
+      // Check if the snapshot is empty
+      if (snapshot.docs.isEmpty) {
+        Get.snackbar("Info", "No points found for this trip.");
+        return;
+      }
+
+      // Convert Firestore documents to Point objects and update the list
+      points.value = snapshot.docs.map((doc) {
+        final data = doc.data();
+
+        return Point(
+            name: data['name'] ?? 'Unnamed Point',
+            details: data['details'] ?? 'No details available',
+            location:
+                LatLng(data['latlong'].latitude, data['latlong'].longitude));
+      }).toList();
+    } catch (e) {
+      Get.snackbar("Error", "Failed to fetch points: $e");
+    }
+  }
+
   // Add point to Firestore under the saved trip
-  Future<void> addPoint(String name, String details) async {
+  Future<void> addPoint(String name, String phone) async {
     if (tripId.value.isEmpty) {
       Get.snackbar("Error", "Please save the trip before adding points.");
       return;
@@ -103,18 +138,18 @@ trips
       // Extract marker position
       final latitude = marker[0].position.latitude;
       final longitude = marker[0].position.longitude;
-
+      print("the marker is ${marker[0].position.latitude}");
       // Create the Point object
       var point = Point(
         name: name,
-        details: details,
+        details: phone,
         location: LatLng(latitude, longitude),
       );
 
       // Prepare location data for Firestore
       Map<String, dynamic> locationData = {
         "name": point.name,
-        "details": point.details,
+        "phone": point.details,
         "latlong": GeoPoint(latitude, longitude),
       };
 
@@ -144,7 +179,7 @@ trips
   }
 
   addPointFromSearch(
-      String name, String details, String latitude, String longitude) async {
+      String name, String phone, String latitude, String longitude) async {
     if (tripId.value.isEmpty) {
       Get.snackbar("Error", "Please save the trip before adding points.");
       return;
@@ -158,14 +193,14 @@ trips
       // Create the Point object
       var point = Point(
         name: name,
-        details: details,
+        details: phone,
         location: LatLng(latitude1, longitude1),
       );
 
       // Prepare location data for Firestore
       Map<String, dynamic> locationData = {
         "name": point.name,
-        "details": point.details,
+        "phone": point.details,
         "latlong": GeoPoint(latitude1, longitude1),
       };
 

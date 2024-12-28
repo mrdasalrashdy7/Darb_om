@@ -46,7 +46,7 @@ class MyMapController extends GetxController {
 
   @override
   void onInit() {
-    getLocation();
+    // getLocation();
 
     super.onInit();
   }
